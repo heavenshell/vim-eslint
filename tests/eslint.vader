@@ -10,9 +10,9 @@ Execute ('Eslint'):
 Execute ('Eslint with tsuquyomi'):
   :edit ./src/app.ts
   :let g:tsuquyomi_disable_quickfix = 1
-  :sleep 3
+  :sleep 4
   :write
-  :sleep 3
+  :sleep 4
 
   let qf = getqflist()
   AssertEqual len(qf), 9
