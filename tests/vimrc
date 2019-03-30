@@ -1,0 +1,28 @@
+set nocompatible
+filetype off
+" Clear all rtp
+set rtp=$VIMRUNTIME
+
+" Add vader.vim to rtp
+set rtp+=./vader.vim
+set rtp+=./tsuquyomi
+set rtp+=../
+filetype plugin indent on
+
+let g:tsuquyomi_disable_quickfix = 1
+
+function! s:ts_callback(qflist) abort
+  call setqflist(a:qflist)
+  let winid = win_getid()
+  call eslint#run('a', winid)
+endfunction
+
+function! s:check()
+  let winid = win_getid()
+  call setqflist([], 'r')
+  call tsuquyomi#registerNotify(function('s:ts_callback'), 'diagnostics')
+  call tsuquyomi#asyncCreateFixlist()
+endfunction
+
+autocmd BufWritePost *.ts,*.tsx silent! call s:check()
+autocmd InsertLeave *.ts,*.tsx silent! call s:check()
