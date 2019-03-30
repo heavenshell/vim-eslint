@@ -3,6 +3,12 @@ dist: xenial
 language: vim
 node_js: stable
 
+before_install:
+  - nvm install "$NODE_VERSION"
+  - nvm use "$NODE_VERSION"
+  - node -v
+  - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.13.0
+  - export PATH=$HOME/.yarn/bin:$PATH
 install:
   - git clone https://github.com/junegunn/vader.vim.git tests/vader.vim
   - git clone https://github.com/Quramy/tsuquyomi.git tests/tsuquyomi.git
@@ -14,7 +20,7 @@ install:
   - git clone https://github.com/junegunn/vader.vim.git
   - export VIM_EXE=$HOME/bin/vim/bin/vim
   - cd $HOME/build/heavenshell/vim-eslint/tests
-  - npm install
+  - yarn
 
 before_script:
   - cd $HOME/build/heavenshell/vim-eslint/tests
