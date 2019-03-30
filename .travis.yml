@@ -4,6 +4,9 @@ language: vim
 node_js: stable
 
 before_install:
+  - cd $HOME/build/heavenshell/vim-eslint/tests
+  - nvm install "$NODE_VERSION"
+  - nvm use "$NODE_VERSION"
   - node -v
   - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.13.0
   - export PATH=$HOME/.yarn/bin:$PATH
