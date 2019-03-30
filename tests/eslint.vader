@@ -1,7 +1,7 @@
 # vim:set et sw=4 ts=4 tw=79:
 Execute ('Eslint'):
   :edit ./src/app.ts
-  :Eslint
+  :call eslint#run('a')
   :sleep 3
 
   let qf = getqflist()
