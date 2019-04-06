@@ -37,13 +37,13 @@ Open TypeScript file and just execute `:Eslint`.
 - Automatically lint on save
 >
   autocmd BufWritePost *.ts,*.tsx call eslint#run('a', get_winid())
-
+<
 1st argument 'a' means add to QuickFix, 'r' means reset QuickFix.
 2nd argument `get_winid()` is window id.
 
 - Integrate with Tsuquyomi
 
-You can use Tsuquyomi's `TsuquyomiGeterr` and eslint.
+You can use Tsuquyomi's `TsuquyomiAsyncGeterr` and eslint.
 Set followings to your vimrc.
 >
   augroup typescript
@@ -77,7 +77,6 @@ Set followings to your vimrc.
       let s:ts_notify = 0
     endfunction
 
-
     function! s:ts_check(delay)
       let s:ts_notify = 1
       if g:tsuquyomi_is_available == 1
@@ -94,6 +93,7 @@ Set followings to your vimrc.
     autocmd InsertLeave,BufWritePost *.ts,*.tsx silent! call s:ts_check(0)
     autocmd TextChanged *.ts,*.tsx call s:ts_check(1000)
   augroup END
+<
 
 - Auto fix
 
