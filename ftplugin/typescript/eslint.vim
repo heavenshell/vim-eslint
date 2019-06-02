@@ -1,7 +1,7 @@
 " File: eslint.vim
 " Author: Shinya Ohyanagi <sohyanagi@gmail.com>
-" WebPage: http://github.com/heavenshell/eim-tslint
-" Description: Vim plugin for tslint
+" WebPage: http://github.com/heavenshell/vim-eslint
+" Description: Vim plugin for eslint
 " License: BSD, see LICENSE for more details.
 let s:save_cpo = &cpo
 set cpo&vim
