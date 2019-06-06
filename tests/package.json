@@ -4,20 +4,17 @@
   "description": "Eslint for vim",
   "main": "index.js",
   "scripts": {
-    "build:ts": "tsc --pretty"
+    "lint": "eslint 'src/**/*.ts{,x}'"
   },
   "author": "Shinya Ohyanagi",
   "license": "BSD-2-Clause",
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^1.5.0",
-    "@typescript-eslint/parser": "^1.5.0",
+    "@typescript-eslint/eslint-plugin": "^1.9.0",
+    "@typescript-eslint/parser": "^1.9.0",
     "eslint": "^5.15.3",
-    "eslint-config-prettier": "^4.1.0",
-    "eslint-plugin-prettier": "^3.0.1",
-    "prettier": "1.16.4",
-    "typescript": "3.3.4000"
-  },
-  "scripts": {
-    "lint": "eslint 'src/**/*.ts{,x}'"
+    "eslint-config-prettier": "^4.3.0",
+    "eslint-plugin-prettier": "^3.1.0",
+    "prettier": "1.17.1",
+    "typescript": "3.5.1"
   }
 }
