@@ -9,6 +9,7 @@ set cpo&vim
 let g:eslint_path = get(g:, 'eslint_path', '')
 let g:eslint_callbacks = get(g:, 'eslint_callbacks', {})
 let g:eslint_ext = get(g:, 'eslint_ext', '.js,.jsx.ts,.tsx')
+let g:eslint_verbose = get(g:, 'eslint_verbose', 0)
 let s:root_path = ''
 
 function! s:detect_root(srcpath)
@@ -34,6 +35,20 @@ function! s:detect_eslint_bin(srcpath)
   endif
 
   return g:eslint_path
+endfunction
+
+function s:show_verbose(msg)
+  let length = len(a:msg)
+  if &columns < 50
+    echo printf('[ESlint] %s...', a:msg[0 : &columns - 14])
+  else
+    if length >= &columns - 50
+      let verbose = a:msg[length - &columns + 50 :  length]
+    else
+      let verbose = a:msg
+    endif
+    echo printf('[ESlint] %s...%s', a:msg[0 : 36], verbose)
+  endif
 endfunction
 
 function! s:parse(results)
@@ -66,6 +81,9 @@ function! s:parse(results)
 endfunction
 
 function! s:callback(ch, msg, mode) abort
+  if g:eslint_verbose
+    call s:show_verbose(a:msg)
+  endif
   try
     let msg = json_decode(a:msg)
     let ret = s:parse(msg)
@@ -90,6 +108,9 @@ function! s:callback_fix(ch, msg, mode, winsaveview)
 endfunction
 
 function! s:exit_callback(ch, msg) abort
+  if g:eslint_verbose
+    echo ''
+  endif
   if has_key(g:eslint_callbacks, 'after_run')
     call g:eslint_callbacks['after_run'](a:ch, a:msg)
   endif
@@ -127,12 +148,21 @@ function! eslint#run(...) abort
   let mode = a:0 > 0 ? a:1 : 'r'
   let file = expand('%:p')
   let bin = s:detect_eslint_bin(file)
-  let cmd = printf(
-    \ '%s --stdin --stdin-filename %s --format json --ext %s',
-    \ bin,
-    \ file,
-    \ g:eslint_ext
-    \ )
+  if g:eslint_verbose
+    let cmd = printf(
+      \ '%s --debug --stdin --stdin-filename %s --format json --ext %s',
+      \ bin,
+      \ file,
+      \ g:eslint_ext
+      \ )
+  else
+    let cmd = printf(
+      \ '%s --stdin --stdin-filename %s --format json --ext %s',
+      \ bin,
+      \ file,
+      \ g:eslint_ext
+      \ )
+  endif
 
   call s:send(cmd, mode, 0, {})
 endfunction
