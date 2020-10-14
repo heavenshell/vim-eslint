@@ -148,12 +148,21 @@ function! eslint#run(...) abort
   let mode = a:0 > 0 ? a:1 : 'r'
   let file = expand('%:p')
   let bin = s:detect_eslint_bin(file)
-  let cmd = printf(
-    \ '%s --debug --stdin --stdin-filename %s --format json --ext %s',
-    \ bin,
-    \ file,
-    \ g:eslint_ext
-    \ )
+  if g:eslint_verbose
+    let cmd = printf(
+      \ '%s --debug --stdin --stdin-filename %s --format json --ext %s',
+      \ bin,
+      \ file,
+      \ g:eslint_ext
+      \ )
+  else
+    let cmd = printf(
+      \ '%s --stdin --stdin-filename %s --format json --ext %s',
+      \ bin,
+      \ file,
+      \ g:eslint_ext
+      \ )
+  endif
 
   call s:send(cmd, mode, 0, {})
 endfunction
