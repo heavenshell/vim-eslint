@@ -26,12 +26,14 @@ jobs:
         shell: bash
         run: |
           git clone --depth 1 --single-branch https://github.com/junegunn/vader.vim.git ./tests/vader.vim
+          git clone --depth 1 --single-branch https://github.com/Quramy/tsuquyomi.git tests/tsuquyomi.git ./tests/tsuquyomi
 
       - name: Run tests
         shell: bash
         run: |
           export PATH=~/nvim/bin:$PATH
           cd ./tests
+          npm install
           nvim -u vimrc -c 'Vader! eslint.vader'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
