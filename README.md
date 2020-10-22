@@ -1,6 +1,6 @@
 # vim-eslint
 
-[![Build Status](https://travis-ci.org/heavenshell/vim-eslint.svg?branch=master)](https://travis-ci.org/heavenshell/vim-eslint)
+![build](https://github.com/heavenshell/vim-eslint/workflows/build/badge.svg)
 
 An asynchronous Eslint(@typescript-eslint) for Vim.
 
