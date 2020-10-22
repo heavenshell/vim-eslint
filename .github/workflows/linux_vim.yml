@@ -27,7 +27,7 @@ jobs:
         shell: bash
         run: |
           git clone --depth 1 --single-branch https://github.com/junegunn/vader.vim.git ./tests/vader.vim
-          git clone --depth 1 --single-branch https://github.com/Quramy/tsuquyomi.git tests/tsuquyomi.git ./tests/tsuquyomi
+          git clone --depth 1 --single-branch https://github.com/Quramy/tsuquyomi.git ./tests/tsuquyomi
 
       - name: Run tests
         shell: bash
