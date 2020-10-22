@@ -10,6 +10,7 @@ let g:eslint_path = get(g:, 'eslint_path', '')
 let g:eslint_callbacks = get(g:, 'eslint_callbacks', {})
 let g:eslint_ext = get(g:, 'eslint_ext', '.js,.jsx.ts,.tsx')
 let g:eslint_verbose = get(g:, 'eslint_verbose', 0)
+let g:eslint_enable_cache = get(g:, 'eslint_enable_cache', 0)
 let s:root_path = ''
 
 function! s:detect_root(srcpath)
@@ -148,17 +149,20 @@ function! eslint#run(...) abort
   let mode = a:0 > 0 ? a:1 : 'r'
   let file = expand('%:p')
   let bin = s:detect_eslint_bin(file)
+  let enable_cache = g:eslint_enable_cache == 1 ? '--cache' : ''
   if g:eslint_verbose
     let cmd = printf(
-      \ '%s --debug --stdin --stdin-filename %s --format json --ext %s',
+      \ '%s %s --debug --stdin --stdin-filename %s --format json --ext %s',
       \ bin,
+      \ enable_cache,
       \ file,
       \ g:eslint_ext
       \ )
   else
     let cmd = printf(
-      \ '%s --stdin --stdin-filename %s --format json --ext %s',
+      \ '%s %s --stdin --stdin-filename %s --format json --ext %s',
       \ bin,
+      \ enable_cache,
       \ file,
       \ g:eslint_ext
       \ )
