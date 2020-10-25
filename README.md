@@ -32,9 +32,15 @@ augroup typescript
   function! s:typescript_after(ch, msg)
     let cnt = len(getqflist())
     if cnt > 0
-      echomsg printf('[Eslint] %s errors', cnt)
+      echomsg printf('[TypeScript] %s errors', cnt)
     endif
   endfunction
+
+  function! s:eslint_callback(qflist, mode)
+    let list = getqflist() + a:qflist
+    call setqflist(list, 'r')
+  endfunction
+
   let g:eslint_callbacks = {
     \ 'after_run': function('s:typescript_after')
     \ }
@@ -43,8 +49,8 @@ augroup typescript
 
   function! s:ts_callback(qflist) abort
     call setqflist(a:qflist)
-    let winid = win_getid()
-    call eslint#run('a', winid)
+    let list = a:qflist + getqflist()
+    call setqflist(list, 'r')
   endfunction
 
   function! s:check()
@@ -52,6 +58,9 @@ augroup typescript
     call setqflist([], 'r')
     call tsuquyomi#registerNotify(function('s:ts_callback'), 'diagnostics')
     call tsuquyomi#asyncCreateFixlist()
+
+    call eslint#register_notify(function('s:eslint_callback'))
+    call eslint#run('a', winid)
   endfunction
 
   autocmd InsertLeave,BufWritePost *.ts,*.tsx silent! call s:check()
