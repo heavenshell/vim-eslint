@@ -1,6 +1,6 @@
 # vim-eslint
 
-![build](https://github.com/heavenshell/vim-eslint/workflows/build/badge.svg)
+![build](https://user-images.githubusercontent.com/56591/97100073-3818ec00-16d3-11eb-99a4-219aef1647bf.gif)
 
 An asynchronous Eslint(@typescript-eslint) for Vim.
 
