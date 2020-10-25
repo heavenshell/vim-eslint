@@ -12,6 +12,7 @@ let g:eslint_ext = get(g:, 'eslint_ext', '.js,.jsx.ts,.tsx')
 let g:eslint_verbose = get(g:, 'eslint_verbose', 0)
 let g:eslint_enable_cache = get(g:, 'eslint_enable_cache', 0)
 let s:root_path = ''
+let s:notify_callback = ''
 
 function! s:detect_root(srcpath)
   if s:root_path == ''
@@ -88,7 +89,12 @@ function! s:callback(ch, msg, mode) abort
   try
     let msg = json_decode(a:msg)
     let ret = s:parse(msg)
-    call setqflist(ret['qflist'], a:mode)
+    if type(s:notify_callback) == 2
+      let Callback = function(s:notify_callback)
+      call Callback(ret['qflist'], a:msg)
+    else
+      call setqflist(ret['qflist'], a:mode)
+    endif
   catch
   endtry
 endfunction
@@ -139,6 +145,10 @@ function! s:send(cmd, mode, autofix, winsaveview) abort
     call ch_sendraw(channel, input)
     call ch_close_in(channel)
   endif
+endfunction
+
+function! eslint#register_notify(callback) abort
+  let s:notify_callback = a:callback
 endfunction
 
 function! eslint#run(...) abort
