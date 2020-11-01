@@ -58,7 +58,7 @@ function! s:parse(results)
   let outputs = []
   for k in a:results
     let messages = k['messages']
-    let filename = fnamemodify(k['filePath'], ':t')
+    let filename = k['filePath']
     for m in messages
       let line = m['line']
       let start = m['column']
