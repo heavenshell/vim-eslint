@@ -11,12 +11,28 @@ let g:eslint_callbacks = get(g:, 'eslint_callbacks', {})
 let g:eslint_ext = get(g:, 'eslint_ext', '.js,.jsx.ts,.tsx')
 let g:eslint_verbose = get(g:, 'eslint_verbose', 0)
 let g:eslint_enable_cache = get(g:, 'eslint_enable_cache', 0)
+let g:eslint_rcfiles = get(g:, 'eslint_rcfiles', [
+  \ '.eslintrc.js',
+  \ '.eslintrc',
+  \ '.eslintrc.json',
+  \ '.eslintrc.yaml',
+  \ '.eslintrc.yml',
+  \ '.eslintrc.cjs',
+  \ 'package.json',
+  \])
+
 let s:root_path = ''
 let s:notify_callback = ''
 
 function! s:detect_root(srcpath)
   if s:root_path == ''
-    let s:root_path = finddir('node_modules', a:srcpath . ';')
+    for rc in g:eslint_rcfiles
+      let path = findfile(rc, a:srcpath . ';')
+      if path != ''
+        let s:root_path = fnamemodify(path, ':p:h') . '/node_modules'
+        break
+      endif
+    endfor
   endif
   return s:root_path
 endfunction
