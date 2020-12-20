@@ -109,6 +109,30 @@ g:eslint_config						*eslint_confg*
 		Path to eslint config file.
 		Default value is ''
 
+g:eslint_path						*eslint_path*
+
+g:eslint_ext						*eslint_ext*
+		Default value is '.js,.jsx.ts,.tsx'
+
+g:eslint_enable_cache					*eslint_enable_cache*
+		Add --cache
+		Default value is 0(disabled)
+
+g:eslint_verbose					*eslint_verbose*
+		Show eslint verbose to echo area
+		Default value is 0(disabled)
+
+g:eslint_rcfiles					*eslint_rcfiles*
+		Search node_module directory by rcfile.
+		Default value are
+			'.eslintrc.js',
+			'.eslintrc',
+			'.eslintrc.json',
+			'.eslintrc.yaml',
+			'.eslintrc.yml',
+			'.eslintrc.cjs',
+			'package.json',
+
 ==============================================================================
 CHANGELOG						*eslint-changelog*
 2019-03-30
