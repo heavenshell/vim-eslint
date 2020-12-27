@@ -133,6 +133,10 @@ g:eslint_rcfiles					*eslint_rcfiles*
 			'.eslintrc.cjs',
 			'package.json',
 
+g:eslint_enable_eslint_d				*eslint_enable_eslint_d*
+		Enable eslint_d if executetable
+		Default value is 0(disabled)
+
 ==============================================================================
 CHANGELOG						*eslint-changelog*
 2019-03-30
