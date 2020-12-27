@@ -20,9 +20,11 @@ let g:eslint_rcfiles = get(g:, 'eslint_rcfiles', [
   \ '.eslintrc.cjs',
   \ 'package.json',
   \])
+let g:eslint_enable_eslint_d = get(g:, 'eslint_enable_eslint_d', 0)
 
 let s:root_path = ''
 let s:notify_callback = ''
+let s:results = []
 
 function! s:detect_root(srcpath)
   if s:root_path == ''
@@ -39,6 +41,10 @@ endfunction
 
 function! s:detect_eslint_bin(srcpath)
   if g:eslint_path != ''
+    return g:eslint_path
+  endif
+  if g:eslint_enable_eslint_d && executable('eslint_d')
+    let g:eslint_path = exepath('eslint_d')
     return g:eslint_path
   endif
   if executable('eslint') == 0
@@ -116,23 +122,40 @@ function! s:callback(ch, msg, mode) abort
 endfunction
 
 function! s:callback_fix(ch, msg, mode, winsaveview)
-  try
-    let msg = json_decode(a:msg)
-    let ret = s:parse(msg)
-    let lines = split(ret['outputs'][0], "\n")
-    call setqflist(ret['qflist'], a:mode)
+  if g:eslint_enable_eslint_d && executable('eslint_d')
+    call add(s:results, a:msg)
+  else
+    try
+      let msg = json_decode(a:msg)
+      let ret = s:parse(msg)
+      let lines = split(ret['outputs'][0], "\n")
+      call setqflist(ret['qflist'], a:mode)
 
-    let view = winsaveview()
-    silent execute '% delete'
-    call setline(1, lines)
-    call winrestview(view)
-  catch
-  endtry
+      let view = winsaveview()
+      silent execute '% delete'
+      call setline(1, lines)
+      call winrestview(view)
+    catch
+    endtry
+  endif
 endfunction
 
 function! s:exit_callback(ch, msg) abort
   if g:eslint_verbose
     echo ''
+  endif
+  if has_key(g:eslint_callbacks, 'after_run')
+    call g:eslint_callbacks['after_run'](a:ch, a:msg)
+  endif
+endfunction
+
+function! s:exit_fix_callback(ch, msg, winsaveview) abort
+  if g:eslint_enable_eslint_d && executable('eslint_d')
+    let view = winsaveview()
+    silent execute '% delete'
+    call setline(1, s:results)
+    call winrestview(view)
+    let s:results = []
   endif
   if has_key(g:eslint_callbacks, 'after_run')
     call g:eslint_callbacks['after_run'](a:ch, a:msg)
@@ -151,7 +174,7 @@ function! s:send(cmd, mode, autofix, winsaveview) abort
   else
     let s:job = job_start(a:cmd, {
           \ 'callback': {c, m -> s:callback_fix(c, m, a:mode, a:winsaveview)},
-          \ 'exit_cb': {c, m -> s:exit_callback(c, m)},
+          \ 'exit_cb': {c, m -> s:exit_fix_callback(c, m, a:winsaveview)},
           \ 'in_mode': 'nl',
           \ })
   endif
@@ -206,12 +229,21 @@ function! eslint#fix(...) abort
   let winsaveview = winsaveview()
   let file = expand('%:p')
   let bin = s:detect_eslint_bin(file)
-  let cmd = printf(
-    \ '%s --stdin --stdin-filename %s --format json --ext %s --fix-dry-run',
-    \ bin,
-    \ file,
-    \ g:eslint_ext
-    \ )
+  if g:eslint_enable_eslint_d && executable('eslint_d')
+    let cmd = printf(
+      \ '%s --stdin-filename %s --stdin --fix-to-stdout --format json --ext %s ',
+      \ bin,
+      \ file,
+      \ g:eslint_ext
+      \ )
+  else
+    let cmd = printf(
+      \ '%s --stdin --stdin-filename %s --format json --ext %s --fix-dry-run',
+      \ bin,
+      \ file,
+      \ g:eslint_ext
+      \ )
+  endif
   call s:send(cmd, mode, 1, winsaveview)
 endfunction
 
