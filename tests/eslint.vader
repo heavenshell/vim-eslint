@@ -14,7 +14,7 @@ Execute ('Eslint with tsuquyomi'):
   :sleep 5
 
   let qf = getqflist()
-  AssertEqual len(qf), 10
+  AssertEqual len(qf), 9
 
 Execute ('EslintAll'):
   :edit ./src/app.ts
