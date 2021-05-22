@@ -23,4 +23,3 @@ Execute ('EslintAll'):
 
   let qf = getqflist()
   AssertNotEqual len(qf), 0
-  AssertNotEqual len(qf), 5
