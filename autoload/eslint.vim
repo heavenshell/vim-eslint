@@ -247,5 +247,40 @@ function! eslint#fix(...) abort
   call s:send(cmd, mode, 1, winsaveview)
 endfunction
 
+function! eslint#all(...) abort
+  if exists('s:job') && job_status(s:job) != 'stop'
+    call job_stop(s:job)
+  endif
+
+  let mode = a:0 > 0 ? a:1 : 'r'
+  let file = expand('%:p')
+
+  let root_path = fnamemodify(trim(s:detect_root(file), '/'), ':p:h')
+  let bin = printf('/%s/node_modules/.bin/eslint', root_path)
+
+  let enable_cache = g:eslint_enable_cache == 1 ? '--cache' : ''
+  if g:eslint_verbose
+    let cmd = printf(
+      \ '%s %s --cache-location /%s/.eslintcache --debug --format json --quiet --ext %s "/%s/**/*.ts{,x}"',
+      \ bin,
+      \ enable_cache,
+      \ root_path,
+      \ g:eslint_ext,
+      \ root_path
+      \ )
+  else
+    let cmd = printf(
+      \ '%s %s --cache-location /%s/.eslintcache --format json --quiet --ext %s "/%s/**/*.ts{,x}"',
+      \ bin,
+      \ enable_cache,
+      \ root_path,
+      \ g:eslint_ext,
+      \ root_path
+      \ )
+  endif
+
+  call s:send(cmd, mode, 0, {})
+endfunction
+
 let &cpo = s:save_cpo
 unlet s:save_cpo
