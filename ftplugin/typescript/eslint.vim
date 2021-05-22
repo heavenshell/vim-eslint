@@ -18,8 +18,10 @@ endif
 
 command! -buffer Eslint    :call eslint#run()
 command! -buffer EslintFix :call eslint#fix()
+command! -buffer EslintAll :call eslint#all()
 noremap <silent> <buffer> <Plug>(Eslint) :Eslint<CR>
 noremap <silent> <buffer> <Plug>(EslintFix) :EslintFix<CR>
+noremap <silent> <buffer> <Plug>(EslintAll) :EslintAll<CR>
 
 let b:loaded_eslint = 1
 
