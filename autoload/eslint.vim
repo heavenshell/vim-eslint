@@ -25,14 +25,24 @@ let g:eslint_enable_eslint_d = get(g:, 'eslint_enable_eslint_d', 0)
 let s:root_path = ''
 let s:notify_callback = ''
 let s:results = []
+let s:current_path = ''
 
 function! s:detect_root(srcpath)
   if s:root_path == ''
-    for rc in g:eslint_rcfiles
-      let path = findfile(rc, a:srcpath . ';')
-      if path != ''
-        let s:root_path = fnamemodify(path, ':p:h') . '/node_modules'
-        break
+    for file in g:eslint_rcfiles
+      let rc = fnamemodify(file, ':r')
+      if stridx(rc, '.') == -1
+        let path = finddir(rc, a:srcpath . ';')
+        if path != ''
+          let s:root_path = fnamemodify(path, ':p:h:h')
+          break
+        endif
+      else
+        let path = findfile(file, a:srcpath . ';')
+        if path != ''
+          let s:root_path = fnamemodify(path, ':p:h')
+          break
+        endif
       endif
     endfor
   endif
@@ -44,6 +54,7 @@ function! s:detect_eslint_bin(srcpath)
     return g:eslint_path
   endif
   if g:eslint_enable_eslint_d && executable('eslint_d')
+    call s:detect_root(a:srcpath)
     let g:eslint_path = exepath('eslint_d')
     return g:eslint_path
   endif
@@ -53,7 +64,7 @@ function! s:detect_eslint_bin(srcpath)
       return ''
     endif
     let root_path = fnamemodify(root_path, ':p')
-    let g:eslint_path = exepath(root_path . '.bin/eslint')
+    let g:eslint_path = exepath(root_path . 'node_modules/.bin/eslint')
   else
     let g:eslint_path = exepath('eslint')
   endif
@@ -140,6 +151,11 @@ function! s:callback_fix(ch, msg, mode, winsaveview)
   endif
 endfunction
 
+function! s:restore() abort
+  set autochdir
+  execute ':lcd ' . s:current_path
+endfunction
+
 function! s:exit_callback(ch, msg) abort
   if g:eslint_verbose
     echo ''
@@ -147,6 +163,7 @@ function! s:exit_callback(ch, msg) abort
   if has_key(g:eslint_callbacks, 'after_run')
     call g:eslint_callbacks['after_run'](a:ch, a:msg)
   endif
+  call s:restore()
 endfunction
 
 function! s:exit_fix_callback(ch, msg, winsaveview) abort
@@ -160,9 +177,16 @@ function! s:exit_fix_callback(ch, msg, winsaveview) abort
   if has_key(g:eslint_callbacks, 'after_run')
     call g:eslint_callbacks['after_run'](a:ch, a:msg)
   endif
+  call s:restore()
 endfunction
 
 function! s:send(cmd, mode, autofix, winsaveview) abort
+  if exists('+autochdir') && &autochdir
+    let s:current_path = getcwd()
+    set noautochdir
+    execute ':lcd ' . s:root_path
+  endif
+
   let bufnum = bufnr('%')
   let input = join(getbufline(bufnum, 1, '$'), "\n") . "\n"
   if a:autofix == 0
