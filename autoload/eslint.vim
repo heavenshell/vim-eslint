@@ -26,6 +26,7 @@ let s:root_path = ''
 let s:notify_callback = ''
 let s:results = []
 let s:current_path = ''
+let s:autochdir = 0
 
 function! s:detect_root(srcpath)
   if s:root_path == ''
@@ -152,8 +153,10 @@ function! s:callback_fix(ch, msg, mode, winsaveview)
 endfunction
 
 function! s:restore() abort
-  set autochdir
-  execute ':lcd ' . s:current_path
+  if exists('+autochdir') && s:autochdir
+    set autochdir
+    execute ':lcd ' . s:current_path
+  endif
 endfunction
 
 function! s:exit_callback(ch, msg) abort
@@ -182,6 +185,7 @@ endfunction
 
 function! s:send(cmd, mode, autofix, winsaveview) abort
   if exists('+autochdir') && &autochdir
+    let s:autochdir = &autochdir
     let s:current_path = getcwd()
     set noautochdir
     execute ':lcd ' . s:root_path
@@ -279,7 +283,7 @@ function! eslint#all(...) abort
   let mode = a:0 > 0 ? a:1 : 'r'
   let file = expand('%:p')
 
-  let root_path = fnamemodify(trim(s:detect_root(file), '/'), ':p:h')
+  let root_path = fnamemodify(trim(s:detect_root(file), '/'), ':p')
   let bin = printf('/%s/node_modules/.bin/eslint', root_path)
 
   let enable_cache = g:eslint_enable_cache == 1 ? '--cache' : ''
