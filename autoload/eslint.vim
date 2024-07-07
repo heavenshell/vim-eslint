@@ -12,6 +12,9 @@ let g:eslint_ext = get(g:, 'eslint_ext', '.js,.jsx.ts,.tsx')
 let g:eslint_verbose = get(g:, 'eslint_verbose', 0)
 let g:eslint_enable_cache = get(g:, 'eslint_enable_cache', 0)
 let g:eslint_rcfiles = get(g:, 'eslint_rcfiles', [
+  \ 'eslint.config.cjs',
+  \ 'eslint.config.mjs',
+  \ 'eslint.config.js',
   \ '.eslintrc.js',
   \ '.eslintrc',
   \ '.eslintrc.json',
@@ -20,6 +23,11 @@ let g:eslint_rcfiles = get(g:, 'eslint_rcfiles', [
   \ '.eslintrc.cjs',
   \ 'package.json',
   \])
+let g:eslint_configs = get(g:, 'eslint_configs', [
+  \ 'eslint.config.cjs',
+  \ 'eslint.config.mjs',
+  \ 'eslint.config.js',
+  \ ])
 let g:eslint_enable_eslint_d = get(g:, 'eslint_enable_eslint_d', 0)
 
 let s:root_path = ''
@@ -27,6 +35,18 @@ let s:notify_callback = ''
 let s:results = []
 let s:current_path = ''
 let s:autochdir = 0
+let s:eslint_config_path = ''
+
+function! s:find_config(srcpath)
+  let config_path = ''
+  for file in g:eslint_configs
+    let config_path = findfile(file, a:srcpath . ';')
+    if config_path != ''
+      break
+    endif
+  endfor
+  return config_path
+endfunction
 
 function! s:detect_root(srcpath)
   if s:root_path == ''
@@ -51,6 +71,7 @@ function! s:detect_root(srcpath)
 endfunction
 
 function! s:detect_eslint_bin(srcpath)
+  let s:eslint_config_path = s:find_config(a:srcpath)
   if g:eslint_path != ''
     return g:eslint_path
   endif
@@ -67,6 +88,7 @@ function! s:detect_eslint_bin(srcpath)
     let root_path = fnamemodify(root_path, ':p')
     let g:eslint_path = exepath(root_path . 'node_modules/.bin/eslint')
   else
+    call s:detect_root(a:srcpath)
     let g:eslint_path = exepath('eslint')
   endif
 
@@ -193,20 +215,22 @@ function! s:send(cmd, mode, autofix, winsaveview) abort
 
   let bufnum = bufnr('%')
   let input = join(getbufline(bufnum, 1, '$'), "\n") . "\n"
-  if a:autofix == 0
-    let s:job = job_start(a:cmd, {
-          \ 'callback': {c, m -> s:callback(c, m, a:mode)},
-          \ 'exit_cb': {c, m -> s:exit_callback(c, m)},
-          \ 'in_mode': 'nl',
-          \ })
-  else
-    let s:job = job_start(a:cmd, {
-          \ 'callback': {c, m -> s:callback_fix(c, m, a:mode, a:winsaveview)},
-          \ 'exit_cb': {c, m -> s:exit_fix_callback(c, m, a:winsaveview)},
-          \ 'in_mode': 'nl',
-          \ })
+
+  let option = {'in_mode': 'nl'}
+
+  if s:eslint_config_path != ''
+    let option['env'] = { 'ESLINT_USE_FLAT_CONFIG': 'true' }
   endif
 
+  if a:autofix == 0
+    let option['callback'] = {c, m -> s:callback(c, m, a:mode)}
+    let option['exit_cb'] = {c, m -> s:exit_callback(c, m)}
+  else
+    let option['callback'] = {c, m -> s:callback_fix(c, m, a:mode, a:winsaveview)}
+    let option['exit_cb'] = {c, m -> s:exit_fix_callback(c, m, a:winsaveview)}
+  endif
+
+  let s:job = job_start(a:cmd, option)
   let channel = job_getchannel(s:job)
   if ch_status(channel) ==# 'open'
     call ch_sendraw(channel, input)
@@ -229,20 +253,24 @@ function! eslint#run(...) abort
   let enable_cache = g:eslint_enable_cache == 1 ? '--cache' : ''
   if g:eslint_verbose
     let cmd = printf(
-      \ '%s %s --debug --stdin --stdin-filename %s --format json --ext %s',
+      \ '%s %s --debug --stdin --stdin-filename %s --format json',
       \ bin,
       \ enable_cache,
       \ file,
-      \ g:eslint_ext
       \ )
   else
     let cmd = printf(
-      \ '%s %s --stdin --stdin-filename %s --format json --ext %s',
+      \ '%s %s --stdin --stdin-filename %s --format json',
       \ bin,
       \ enable_cache,
       \ file,
-      \ g:eslint_ext
       \ )
+  endif
+
+  if s:eslint_config_path == ''
+    let cmd = printf('%s --ext %s', cmd, g:eslint_ext)
+  else
+    let cmd = printf('%s --config %s', cmd, s:eslint_config_path)
   endif
 
   call s:send(cmd, mode, 0, {})
@@ -259,19 +287,24 @@ function! eslint#fix(...) abort
   let bin = s:detect_eslint_bin(file)
   if g:eslint_enable_eslint_d && executable('eslint_d')
     let cmd = printf(
-      \ '%s --stdin-filename %s --stdin --fix-to-stdout --format json --ext %s ',
+      \ '%s --stdin-filename %s --stdin --fix-to-stdout --format json',
       \ bin,
       \ file,
-      \ g:eslint_ext
       \ )
   else
     let cmd = printf(
-      \ '%s --stdin --stdin-filename %s --format json --ext %s --fix-dry-run',
+      \ '%s --stdin --stdin-filename %s --format json --fix-dry-run',
       \ bin,
       \ file,
-      \ g:eslint_ext
       \ )
   endif
+
+  if s:eslint_config_path == ''
+    let cmd = printf('%s --ext %s', cmd, g:eslint_ext)
+  else
+    let cmd = printf('%s --config %s', cmd, s:eslint_config_path)
+  endif
+
   call s:send(cmd, mode, 1, winsaveview)
 endfunction
 
@@ -283,28 +316,30 @@ function! eslint#all(...) abort
   let mode = a:0 > 0 ? a:1 : 'r'
   let file = expand('%:p')
 
-  let root_path = fnamemodify(trim(s:detect_root(file), '/'), ':p')
-  let bin = printf('/%s/node_modules/.bin/eslint', root_path)
+  let root_path = s:detect_root(file)
+  let bin = s:detect_eslint_bin(file)
 
   let enable_cache = g:eslint_enable_cache == 1 ? '--cache' : ''
+
   if g:eslint_verbose
     let cmd = printf(
-      \ '%s %s --cache-location /%s/.eslintcache --debug --format json --quiet --ext %s "/%s/**/*.ts{,x}"',
+      \ '%s %s --cache-location %s/.eslintcache --debug --format json --quiet',
       \ bin,
       \ enable_cache,
       \ root_path,
-      \ g:eslint_ext,
-      \ root_path
       \ )
   else
     let cmd = printf(
-      \ '%s %s --cache-location /%s/.eslintcache --format json --quiet --ext %s "/%s/**/*.ts{,x}"',
+      \ '%s %s --cache-location %s/.eslintcache --format json --quiet',
       \ bin,
       \ enable_cache,
       \ root_path,
-      \ g:eslint_ext,
-      \ root_path
       \ )
+  endif
+  if s:eslint_config_path == ''
+    let cmd = printf('%s --ext %s "%s/**/*.ts{,x}"', cmd, g:eslint_ext, root_path)
+  else
+    let cmd = printf('%s "%s/**/*.ts{,x}" --config %s', cmd, root_path, s:eslint_config_path)
   endif
 
   call s:send(cmd, mode, 0, {})
