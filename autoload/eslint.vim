@@ -123,7 +123,9 @@ function! s:parse(results)
       call add(qflist, {
             \ 'filename': filename,
             \ 'lnum': line,
+            \ 'end_lnum': m['endLine'],
             \ 'col': start,
+            \ 'end_col': m['endColumn'],
             \ 'vcol': 0,
             \ 'text': printf('[ESlint] %s (%s)', text, m['ruleId']),
             \ 'type': 'E'
