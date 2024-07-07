@@ -34,7 +34,7 @@ jobs:
         run: |
           export PATH=~/vim/bin:$PATH
           cd ./tests
-          npm install
+          yarn
           vim -u vimrc -c 'Vader! eslint.vader'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
